@@ -83,7 +83,7 @@ RESTlib provides a way of defining middleware at the resource level. Certain
 resources may require special handling depending on the function it serves. The
 way to manage this currently with Django views is to _decorate_ views with
 additional functionality, which includes things like ``@auth_required`` and
-``@cache(60 * 60 * 24)``.
+``@cache_page(60 * 60 * 24)``.
 
 A simple middleware that will enable Cross-Origin Resource Sharing (CORS) can
 defined like this:
@@ -120,7 +120,7 @@ When browsers make non-simple requests to resources of different origin, they
 typically perform a [preflight] [2] request (using ``OPTIONS``) to check if the
 pending request is allowed to be made. This middleware ensures a given resource
 is allowed to be accessed by clients located on the ``example.org`` domain for
-1 hour at a time and for the non-simple method 'PUT'.
+1 hour at a time and for the non-simple method ``PUT``.
 
 [1]: http://docs.djangoproject.com/en/dev/topics/http/middleware/
 [2]: http://www.w3.org/TR/cors/#preflight-request
