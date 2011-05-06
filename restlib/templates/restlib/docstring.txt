@@ -1,0 +1,18 @@
+REST API for the "{{ name }}" resource
+
+Supported Methods: {{ resource.methods|join:", " }}
+
+    Safe Methods: {{ resource.safe_methods|join:", " }}
+    Idempotent Methods: {{ resource.idempotent_methods|join:", "}}
+
+Accepted MimeTypes: {{ resource.mimetypes|join:", " }}
+
+{% if resource.ajax_required %}
+    Only 'XMLHttpRequest' requests permitted (AJAX only)
+{% endif %}
+
+{% if resource.auth_required %}
+    All requests require authentication
+{% endif %}
+
+
