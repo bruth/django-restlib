@@ -4,8 +4,8 @@ WARNINGS_ENABLED = False
 
 # if any of the fields defined for a ModelResource class cannot be properly
 # resolved for the model objects, by default, an AttributeError will be raised.
-# setting this to ``True`` will make those errors be ignored. the missing fields
-# will not be present in the output resolved object
+# setting this to ``True`` will ignore those errors. the missing fields will not
+# be present in the output resolved object
 IGNORE_MISSING_FIELDS = False
 
 # the default representation when traversing related objects for any object. if

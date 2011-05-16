@@ -1,4 +1,9 @@
 class HttpMethod(object):
+    """An HTTP method which defines whether this method is safe and
+    idempotent.
+    
+    ref: http://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html
+    """
     def __init__(self, method, safe, idempotent):
         self.method = method
         self.safe = safe
@@ -8,16 +13,40 @@ class HttpMethod(object):
         return self.method
 
     def __repr__(self):
+        props = []
+
+        if self.safe:
+            props.append('Safe')
+        if self.idempotent:
+            props.append('Idempotent')
+
+        if props:
+            return '<HttpMethod: %s ()>' % (str(self), ', '.join(props))
         return '<HttpMethod: %s>' % str(self)
 
     def __eq__(self, obj):
-        if type(obj) is str:
+        if isinstance(obj, basestring):
             return obj == str(self)
         return super(HttpMethod, self).__cmp__(obj)
 
 
-# Request HttpMethods
-# http://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html
+class HttpStatusCode(object):
+    """HTTP response status code which may be used within ``Resource``
+    methods for constructing a reponse.
+
+    ref: http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
+    """
+    def __init__(self, code, message):
+        self.code = code
+        self.message = message
+
+    def __repr__(self):
+        return '<HttpStatusCode: %s (%d)>' % (self.message, self.code)
+
+    def __eq__(self, obj):
+        return obj == self.code
+
+
 GET     = HttpMethod('GET', True, True)
 HEAD    = HttpMethod('HEAD', True, True)
 OPTIONS = HttpMethod('OPTIONS', True, True)
@@ -26,32 +55,15 @@ PUT     = HttpMethod('PUT', False, True)
 DELETE  = HttpMethod('DELETE', False, True)
 POST    = HttpMethod('POST', False, False)
 
-# PATCH Method for HTTP
-# http://tools.ietf.org/html/rfc5789
+# PATCH Method introduced; ref: http://tools.ietf.org/html/rfc5789
 PATCH   = HttpMethod('PATCH', False, False)
 
 methods = dict((str(x), x) for x in
     (OPTIONS, GET, HEAD, POST, PUT, DELETE, TRACE, PATCH))
 
-# Response status defintions
-# http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
-
-class HttpStatusCode(object):
-
-    def __init__(self, code, message):
-        self.code = code
-        self.message = message
-
-    def __eq__(self, obj):
-        return obj == self.code
-
-    def __repr__(self):
-        return '<HttpStatusCode: %s (%d)>' % (self.message, self.code)
-
-
 # Informational 1xx
 CONTINUE = HttpStatusCode(100, 'Continue')
-SWITCHING_PROTOCOLS = HttpStatusCode(101, 'Switch Protocls')
+SWITCHING_PROTOCOLS = HttpStatusCode(101, 'Switch Protocols')
 
 # Successful 2xx
 OK = HttpStatusCode(200, 'OK')

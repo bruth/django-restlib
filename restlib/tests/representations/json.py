@@ -1,7 +1,7 @@
 from decimal import Decimal
 from django.test import TestCase
 
-from restlib.representations import json
+from restlib.representations import _json as json
 
 __all__ = ('JSONRepresentationTestCase',)
 

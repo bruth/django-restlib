@@ -11,6 +11,30 @@ from restlib.resources import utils
 
 __all__ = ('ModelResource', 'ModelResourceCollection')
 
+def _get_model(model):
+    if isinstance(model, basestring):
+        path = model.split('.')
+        klass = path.pop()
+
+        m = None
+        # treat it as a normal model if path only contains the
+        # app label
+        if len(path) == 1:
+            m = loading.get_model(path[0], klass)
+
+        # fallback, if model not found in app
+        if m is None:
+            mod = import_module('.'.join(path))
+            try:
+                m = getattr(mod, klass)
+            except AttributeError:
+                pass
+
+        if m is None:
+            raise ImportError, '%s not found' % model
+
+        model = m
+    return model
 
 class ModelResourceMetaclass(ResourceMetaclass):
     # an internal registry of all ModelResource classes defined. this is needed
@@ -29,30 +53,7 @@ class ModelResourceMetaclass(ResourceMetaclass):
                 raise AttributeError, ('No model defined. If no model is necessary '
                     'define a Resource instead of a ModelResource')
 
-            model = new_cls.model
-
-            if isinstance(model, basestring):
-                path = model.split('.')
-                klass = path.pop()
-
-                m = None
-                # treat it as a normal model if path only contains the
-                # app label
-                if len(path) == 1:
-                    m = loading.get_model(path[0], klass)
-
-                # fallback, if model not found in app
-                if m is None:
-                    mod = import_module('.'.join(path))
-                    try:
-                        m = getattr(mod, klass)
-                    except AttributeError:
-                        pass
-
-                if m is None:
-                    raise ImportError, '%s not found' % model
-
-                model = m
+            model = _get_model(new_cls.model)
 
             if not issubclass(model, models.Model):
                 raise TypeError, 'Not a valid model'

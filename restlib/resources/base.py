@@ -46,12 +46,11 @@ def OPTIONS(self, request, *args, **kwargs):
     response['Allow'] = ', '.join(self.allowed_methods)
     return response
 
-
 def _setup_middleware(mcls, resource):
     allowed_methods = resource.allowed_methods
 
-    processes = dict((method, {}) for method in allowed_methods)
-    processes['__all__'] = {}
+    processors = dict((method, {}) for method in allowed_methods)
+    processors['__all__'] = {}
 
     # iterate over each middleware for the resource and load it if it
     # does not exist. cache each ``mw_instance`` as they are loaded
@@ -83,13 +82,13 @@ def _setup_middleware(mcls, resource):
         # methods as defined by the resource
         methods = getattr(mw_instance, 'methods', None)
 
-        for method in processes:
+        for method in processors:
             # skip if the middleware defines a specific subset of 
             # methods that are applicable
             if methods and method not in methods:
                 continue
 
-            procs = processes[method]
+            procs = processors[method]
 
             if hasattr(mw_instance, 'process_request'):
                 procs.setdefault('process_request', [])
@@ -99,7 +98,8 @@ def _setup_middleware(mcls, resource):
                 procs.setdefault('process_response', [])
                 procs['process_response'].append(mw_instance.process_response)
 
-        resource._middleware = processes
+        resource._middleware = processors
+
 
 class ResourceMetaclass(type):
     """
@@ -116,11 +116,12 @@ class ResourceMetaclass(type):
         # perform further manipulation of the new class only if this does not
         # represent the base class defined locally
         if cls.__module__ != new_cls.__module__:
+
             # if HEAD is not already defined, use a sensible default
             if hasattr(new_cls, 'GET') and not hasattr(new_cls, 'HEAD'):
                 new_cls.HEAD = HEAD
 
-            # if ``allowed_methods`` not defined explicitly in attrs, this
+            # if ``allowed_methods`` is not defined explicitly in attrs, this
             # could mean one of two things: that the user wants it to inherit
             # from the parent class (if exists) or for it to be set implicitly.
             # the more explicit (and flexible) behavior will be to not inherit
@@ -155,20 +156,21 @@ class ResourceMetaclass(type):
 
             # the docstring rendering comes after populating all other
             # attributes since it depends on the complete set of attributes
-            # that class expects to be set. note, the __doc__ is intentially
+            # that class expects to be set. note, the __doc__ is intentionally
             # checked in the new class' attributes since the docs should be
             # regenerated for every class
             if '__doc__' not in attrs:
                 new_cls.__doc__ = build_docstring(new_cls)
 
+            # add to the Resource cache for cross-resource referencing
             if new_cls not in cls._cache:
                 cls._cache[new_cls] = len(cls._cache)
 
         return new_cls
 
     def __call__(cls, *args, **kwargs):
-        """Tests to see if the first argument is a HttpRequest object, creates
-        an instance calls it with the arguments (used as a view).
+        """Tests to see if the first argument is an HttpRequest object, creates
+        an instance, and calls it with the arguments.
         """
         if args and isinstance(args[0], HttpRequest):
             instance = super(ResourceMetaclass, cls).__call__()
@@ -177,22 +179,12 @@ class ResourceMetaclass(type):
 
 
 class Resource(object):
-    """
-    The base Resource class which provides a simple interface for defining
+    """The base Resource class which provides a simple interface for defining
     methods that correlate to the HTTP methods.
 
-    ``ajax_required`` - requires all requests to have the X-Requested-With
-    header be equal to XMLHttpRequest.
-
-    ``auth_required`` - requires all requests be requested by an authenticated
-    user.
-
-    ``csrf_exempt`` - exempts this resource from requiring a CSRF token for
-    POST and PUT requests.
-
     ``allowed_methods`` - if this attribute is defined, it explicitly sets the
-    HTTP requests that will be processed. If not defined, each method with the
-    same name as a HTTP method will be considered allowed.
+    type of HTTP requests that will be processed. If not defined, each method
+    with the same name as an HTTP method will be allowed.
 
     ``mimetypes`` - a list of acceptable mimetypes that can be accepted
     and/or responded with. the precedence of a mimetype is defined by the
@@ -208,6 +200,26 @@ class Resource(object):
     def __call__(self, request, *args, **kwargs):
         method = request.method
 
+        _response = self._process_request_middleware(request)
+        if _response is not None:
+            return _response
+
+        # call the requested resource method
+        output = getattr(self, method)(request, *args, **kwargs)
+
+        # get the response based on the Resource method's output
+        response = self._get_response(request, output)
+
+        _response = self._process_response_middleware(request, response)
+        if _response is not None:
+            return _response
+
+        return response
+
+    def _process_request_middleware(self, request):
+        method = request.method
+
+        # get all middleware for this method
         if method in self._middleware:
             procs = self._middleware[method]
         else:
@@ -226,16 +238,26 @@ class Resource(object):
                     if isinstance(message, HttpResponse):
                         return message
 
+                    # custom method that may exist on the middleware class
+                    # for generating an HttpResponse object
                     if hasattr(mw_cls, 'get_response'):
                         return mw_cls.get_response(message=message,
                             resource=self, request=request)
 
                     return HttpResponse(str(message), status=mw_cls.status_code)
 
-        # call the requested resource method
-        output = getattr(self, method)(request, *args, **kwargs)
-        response = self._get_response(request, output)
+    def _process_response_middleware(self, request, response):
+        method = request.method
 
+        # get all middleware for this method
+        if method in self._middleware:
+            procs = self._middleware[method]
+        else:
+            procs = self._middleware['__all__']
+
+        # iterate over all response processors. if at any point the processor
+        # returns a message that is not None, then we generate an HttpResponse
+        # object and return it
         if procs.has_key('process_response'):
             # iterate over all response processors
             for proc in procs['process_response']:
@@ -253,8 +275,6 @@ class Resource(object):
 
                     return HttpResponse(str(message), status=mw_cls.status_code)
 
-        return response
-
     def _get_response(self, request, output):
         """Handles various output types from HTTP method calls.
 
@@ -267,7 +287,8 @@ class Resource(object):
             3. test for a two-item tuple containing an HttpStatusCode
             instance and the content
                 - the status code defines the response type and the second
-                argument defines an optional entity-body
+                argument defines an optional entity-body which will be encoded
+                based on the 'Accept' header
 
             4. any other object
                 - will use a standard 200 status code
@@ -308,9 +329,8 @@ class Resource(object):
             accepttype = request.accepttype
 
             if streaming is False:
-                # this is an assumption that if the resource returns a response, it
-                # is compliant and should not be further modified with respect to the
-                # entity body, nor the content type.
+                # attempt to resolve and encode the content based on the
+                # accepttype
                 content = self.resolve_fields(output)
                 content = representation.encode(accepttype, content)
 
@@ -319,10 +339,13 @@ class Resource(object):
         else:
             response = HttpResponse(status=status)
 
+        if streaming:
+            response.streaming = True
+
         return response
 
     # this is defined as a class method since it really is only referencing
-    # class attributes and it may be referenced by another ModelResource while
+    # class attributes and it may be referenced by another Resource while
     # being processed
     @classmethod
     def resolve_fields(cls, obj):
@@ -366,5 +389,5 @@ class ResourceCollection(Resource):
     # being processed
     @classmethod
     def resolve_fields(cls, obj):
-        return utils.model_to_resource(obj, resource=cls._resource_cls)
+        return utils.model_to_resource(obj, resource=cls._resource.__class__)
 

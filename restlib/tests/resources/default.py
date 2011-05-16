@@ -76,7 +76,7 @@ class ResourceTestCase(TestCase):
 
         request.META['HTTP_X_REQUESTED_WITH'] = u'XMLHttpRequest'
         request.META['CONTENT_TYPE'] = 'application/json'
-        request.raw_post_data = '{"name": "John Doe", "age": 37}'
+        request._raw_post_data = '{"name": "John Doe", "age": 37}'
 
         response = self.c(request)
         self.assertEqual(request.data, {'name': 'John Doe', 'age': 37})
@@ -119,7 +119,7 @@ class ResourceTestCase(TestCase):
         request = HttpRequest()
         request.method = 'PUT'
         request.META['CONTENT_TYPE'] = 'application/json; charset=utf-8'
-        request.raw_post_data = '{"name": "Sally Doe", "age": null}'
+        request._raw_post_data = '{"name": "Sally Doe", "age": null}'
 
         self.b(request)
         self.assertEqual(request.contenttype, 'application/json')
