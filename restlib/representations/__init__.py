@@ -1,6 +1,6 @@
 import warnings
 
-from restlib.representations import _json, _plain, _octet, _xml
+from restlib.representations import _json, _plain, _octet, _xml, _www
 
 class Representation(object):
     library = {}
@@ -42,6 +42,7 @@ class Representation(object):
 representation = Representation()
 
 # register built-in representation encoders/decoders
+representation.register('application/x-www-form-urlencoded', _www.UrlEncoded)
 representation.register('application/octet-stream', _octet.OctetStream)
 representation.register('text/plain', _plain.PlainText)
 representation.register('application/json', _json.JSON)
