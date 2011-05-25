@@ -91,8 +91,7 @@ class DataOrientedXML(object):
         root = ET.XML(text)
         return self._decode(root, converters)
 
-    def encode(self, data, **kwargs):
-        root_tag = kwargs.get('root_tag', 'root')
+    def encode(self, data, root_tag='root', **kwargs):
         root = ET.Element(root_tag)
         return ET.tostring(self._encode(data, root), 'utf-8')
 

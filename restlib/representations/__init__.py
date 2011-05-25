@@ -19,15 +19,15 @@ class Representation(object):
     def unregister(cls, mimetype):
         cls.library.pop(mimetype, None)
 
-    def encode(self, mimetype, data):
+    def encode(self, mimetype, data, **kwargs):
         if mimetype not in self.library:
             raise KeyError, 'Encoder for %s not registered' % mimetype
-        return self.library[mimetype].encode(data)
+        return self.library[mimetype].encode(data, **kwargs)
 
-    def decode(self, mimetype, data):
+    def decode(self, mimetype, data, **kwargs):
         if mimetype not in self.library:
             raise KeyError, 'Decoder for %s not registered' % mimetype
-        return self.library[mimetype].decode(data)
+        return self.library[mimetype].decode(data, **kwargs)
 
     def supports_encoding(self, mimetype):
         if mimetype not in self:

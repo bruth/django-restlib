@@ -55,12 +55,12 @@ class JSON(object):
             'sort_keys': True,
         }
 
-    def encode(self, data, options=None):
+    def encode(self, data, options=None, **kwargs):
         if options is None:
             options = self.encode_options
         return simplejson.dumps(data, cls=EnhancedJSONEncoder, **options)
 
-    def decode(self, data, options=None):
+    def decode(self, data, options=None, **kwargs):
         if options is None:
             options = self.decode_options
         return simplejson.loads(data, cls=EnhancedJSONDecoder, **options)
