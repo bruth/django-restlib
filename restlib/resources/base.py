@@ -310,11 +310,11 @@ class Resource(object):
         # see if the output is a status/content pair, otherwise
         # assume the output is strictly content
         elif type(output) in (list, tuple):
-            content = output[1]
             if isinstance(output[0], http.HttpStatusCode):
                 status = output[0].code
+                content = output[1]
             else:
-                status = output[0]
+                content = output
         else:
             content = output
 
@@ -331,7 +331,7 @@ class Resource(object):
             if streaming is False:
                 # attempt to resolve and encode the content based on the
                 # accepttype
-                content = self.resolve_fields(output)
+                content = self.resolve_fields(content)
                 content = representation.encode(accepttype, content)
 
             response = HttpResponse(content, status=status, mimetype=accepttype)
