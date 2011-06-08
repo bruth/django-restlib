@@ -26,7 +26,7 @@ class MetaclassTestCase(TestCase):
         klasses = ModelResourceMetaclass._defaults.keys()
         names = sorted([m.__name__ for m in klasses])
 
-        self.assertEqual(names, ['Book', 'Hacker', 'Library', 'SomeModel'])
+        self.assertEqual(names, ['Book', 'Hacker', 'Library'])
 
     def test_update(self):
         class Location(models.Model):
