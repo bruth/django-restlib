@@ -18,6 +18,7 @@ there:
 ```python
 from restlib import http
 from restlib import resources
+from blog.forms import PostForm
 
 class PostResource(resources.ModelResource):            # 1
     model = 'blog.Post'                                 # 2
