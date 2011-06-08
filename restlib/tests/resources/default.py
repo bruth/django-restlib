@@ -104,6 +104,7 @@ class ResourceTestCase(TestCase):
     def test_options(self):
         request = HttpRequest()
         request.method = 'OPTIONS'
+        request.META['HTTP_ACCEPT'] = 'application/json'
 
         response = self.a(request)
         self.assertEqual(response['Allow'], 'OPTIONS')

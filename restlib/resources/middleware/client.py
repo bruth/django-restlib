@@ -42,10 +42,13 @@ class NotAcceptable(object):
     status_code = 406
 
     def process_request(self, resource, request, **kwargs):
+        accepttype = utils.get_accepttype(request, resource.mimetypes)
+
         # augment request object with the mimetype required by the 'Accept'
         # header. this value will be None if a match is not determined
-        if not utils.get_accepttype(request, resource.mimetypes):
-            return HttpResponse(', '.join(resource.mimetypes))
+        if not accepttype or not representation.supports_encoding(accepttype):
+            return HttpResponse(', '.join(resource.mimetypes),
+                status=self.status_code)
 
 
 class RequestURITooLong(object):
@@ -66,13 +69,13 @@ class UnsupportedMediaType(object):
         if method == http.PUT:
             utils.coerce_post_put(request)
 
-        match, contenttype = utils.get_contenttype(request, resource.mimetypes)
+        contenttype = utils.get_contenttype(request, resource.mimetypes)
 
         # If a decoder for this type is not found, the request will be
         # stopped from further processing and return a 'Unsupported Media
         # Type' code as defined here: http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.7
         # with a list of accepted mimetypes.
-        if match is None or not representation.supports_decoding(contenttype):
+        if not contenttype or not representation.supports_decoding(contenttype):
             return ''
 
         payload = request.raw_post_data

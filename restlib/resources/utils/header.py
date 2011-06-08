@@ -5,8 +5,6 @@ def mimetype_supported(mimetype, mimetypes):
     """Performs the handy work of determining the best match between the given
     mimetype and the list of mimetypes that are supported.
     """
-    if not mimetype:
-        return DEFAULT_CONTENTTYPE
     # early return if all mimetypes are accepted
     if mimetype == ANY_MIMETYPE:
         return mimetypes[0]
@@ -27,10 +25,14 @@ def get_contenttype(request, mimetypes):
     further processing downstream.
     """
     mimetype = request.META.get('CONTENT_TYPE', None)
-    match = mimetype_supported(mimetype, mimetypes)
+
+    if not mimetype:
+        match = DEFAULT_CONTENTTYPE
+    else:
+        match = mimetype_supported(mimetype, mimetypes)
 
     request.contenttype = match
-    return (match is not None, match)
+    return match
 
 def get_accepttype(request, mimetypes):
     """
@@ -42,18 +44,19 @@ def get_accepttype(request, mimetypes):
     further processing downstream.
     """
     mimetype = request.META.get('HTTP_ACCEPT', None)
-    if mimetype is None:
-        # assume an acceptable type is the contenttype is one is supplied.
-        # this requires the contenttype processing be done before the
-        # accepttype
-        if hasattr(request, 'contenttype'):
-            mimetype = request.contenttype
-        else:
-            mimetype = ANY_MIMETYPE
 
-    match = mimetype_supported(mimetype, mimetypes)
+    # assume an acceptable type is the contenttype is one is supplied.
+    # this requires the contenttype processing be done before the
+    # accepttype
+    if not mimetype and getattr(request, 'contenttype', None):
+        mimetype = request.contenttype
 
-    request.accepttype = match
+    if mimetype:
+        match = mimetype_supported(mimetype, mimetypes)
+        request.accepttype = match
+    else:
+        match = None
+
     return match
 
 def coerce_post_put(request):
