@@ -148,15 +148,19 @@ def model_to_resource(obj, resource=None, fields=None, depth=0):
     """Takes a model object or queryset and converts it into a native object
     given the list of attributes either local or related to the object.
     """
-    queryset = False
+    model = None
+    iterable = False
 
-    # test to see if the object is a QuerySet
-    if isinstance(obj, QuerySet):
-        model = obj.model
-        queryset = True
-
-    elif isinstance(obj, models.Model):
+    if isinstance(obj, models.Model):
         model = obj.__class__
+
+    elif isinstance(obj, QuerySet):
+        model = obj.model
+        iterable = True
+
+    # test to see if the object is some kind of iterable
+    elif hasattr(obj, '__iter__') and not isinstance(obj, dict):
+        iterable = True
 
     # return without further processing since it will not have a resource
     # associated with it. this is a failsafe if this function is used blindly
@@ -164,12 +168,12 @@ def model_to_resource(obj, resource=None, fields=None, depth=0):
     else:
         return obj
 
-    if resource is None:
+    if model and resource is None:
         resource, created = get_resource_for_model(model, fields=fields)
 
     # optimization so the resource does not have to be looked every iteration
-    if queryset:
-        return [model_to_resource(x, resource) for x in obj.iterator()]
+    if iterable:
+        return [model_to_resource(x, resource) for x in iter(obj)]
 
     new_obj = {}
 
