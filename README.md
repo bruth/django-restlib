@@ -47,31 +47,29 @@ class PostResource(resources.ModelResource):            # 1
 
 ``#1`` is the class definition. In this case, a Django model is the
 resource being represented here, thus we use the ``ModelResource`` class
-which contains additional features.
+which contains helper methods such as the ``queryset()`` and ``get()``.
 
 ``#2`` defines that actual model being represented. It can be the class
 itself or a string (as shown above) defining the app name and class name.
-Regardless if a string is defined here, when the class is defined the actual
-model class will be found and used.
 
 ``#3`` defines our first supported HTTP method for this resource (resources
-are not assumed to support only ``OPTIONS`` by default), therefore ``GET``
+are assumed to support only ``OPTIONS`` by default), therefore ``GET``
 requests can be made to this resource. If ``GET`` is defined, ``HEAD`` will
 automatically be added to the resource.
 
-``#4`` defines the second supported HTTP method for this resource. It performs
-a simple form validation check using the existing instance.
+``#4`` defines the second supported HTTP method for this resource. It uses a
+Django form to validate the sent data and to update the ``post`` instance.
 
 ``#5`` and ``#6`` shows two variations for returning a custom status code. The
 first represents the status code for '204 No Content' which tells the client
-the ``PUT`` was successful, but not content will be returned to the client.
+the ``PUT`` was successful, but no content will be returned to the client.
 
 The second form returns a '409 Conflict' which includes a custom error message
-that will be sent as the content body of the response.  
+that will be sent as the content body of the response.
 
 
-Publish API
------------
+Publishing APIs
+---------------
 Resource classes can be hooked into Django's URLconfs the same way views are:
 
 ```python
