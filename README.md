@@ -16,18 +16,25 @@ resource may be required. Let's start with an example and break it down from
 there:
 
 ```python
-from restlib import http
-from restlib import resources
+from restlib import http, resources
 from blog.forms import PostForm
 
 class PostResource(resources.ModelResource):            # 1
     model = 'blog.Post'                                 # 2
 
     def GET(self, request, pk):                         # 3
-        return self.queryset(request).get(pk=pk)
+
+        post = self.get(request, pk=pk)
+        if not post:
+            return http.NOT_FOUND
+        return post
 
     def PUT(self, request, pk):                         # 4
-        post = self.GET(request, pk)
+
+        post = self.get(request, pk=pk)
+        if not post:
+            return http.NOT_FOUND
+        return post
 
         form = PostForm(request.data, instance=post)
 
