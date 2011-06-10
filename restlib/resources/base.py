@@ -310,12 +310,11 @@ class Resource(object):
         # see if the output is a status/content pair, otherwise
         # assume the output is strictly content
         elif output and type(output) in (list, tuple):
-            if output:
-                if isinstance(output[0], http.HttpStatusCode):
-                    status = output[0].code
-                    content = output[1]
-                else:
-                    content = output
+            if isinstance(output[0], http.HttpStatusCode):
+                status = output[0].code
+                content = output[1]
+            else:
+                content = output
 
         # none of the basic parsing passed, therefore the output is
         # the content
