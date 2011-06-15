@@ -144,36 +144,24 @@ def get_resource_for_model(model, fields=None):
     return get_or_create_resource(model, force=force,
         fields=fields)
 
+
+def queryset_to_resource(obj, resource=None, fields=None, depth=0):
+    model = obj.model
+
+    if resource is None:
+        resource, created = get_resource_for_model(model, fields=fields)
+
+    return [model_to_resource(x, resource=resource) for x in iter(obj)]
+
+
 def model_to_resource(obj, resource=None, fields=None, depth=0):
     """Takes a model object or queryset and converts it into a native object
     given the list of attributes either local or related to the object.
     """
-    model = None
-    iterable = False
+    model = obj.__class__
 
-    if isinstance(obj, models.Model):
-        model = obj.__class__
-
-    elif isinstance(obj, QuerySet):
-        model = obj.model
-        iterable = True
-
-    # test to see if the object is some kind of iterable
-    elif hasattr(obj, '__iter__') and not isinstance(obj, dict):
-        iterable = True
-
-    # return without further processing since it will not have a resource
-    # associated with it. this is a failsafe if this function is used blindly
-    # or in a recursive scenario
-    else:
-        return obj
-
-    if model and resource is None:
+    if resource is None:
         resource, created = get_resource_for_model(model, fields=fields)
-
-    # optimization so the resource does not have to be looked every iteration
-    if iterable:
-        return [model_to_resource(x, resource) for x in iter(obj)]
 
     new_obj = {}
 
@@ -203,18 +191,40 @@ def model_to_resource(obj, resource=None, fields=None, depth=0):
         else:
             value = getattr(resource, field)(obj)
 
-        # this implies a local foreign key or one-to-one relationship
-        if isinstance(value, models.Model):
-            value = model_to_resource(value, fields=fields)
-
-        # this implies a local many-to-many or a reverse foreign key
-        elif value.__class__.__name__ in ('RelatedManager', 'ManyRelatedManager'):
-            value = model_to_resource(value.all(), fields=fields)
-
-        # check if the attribute is callable
-        elif callable(value):
+        # call if a callable
+        if callable(value):
             value = value()
 
-        new_obj[key] = value
+        # handle a local many-to-many or a reverse foreign key
+        elif value.__class__.__name__ in ('RelatedManager', 'ManyRelatedManager'):
+            value = value.all()
+
+        new_obj[key] = convert_to_resource(value, fields=fields)
 
     return new_obj
+
+
+def convert_to_resource(obj, *args, **kwargs):
+    """Recursively attempts to find ``Model`` and ``QuerySet`` instances
+    to convert them into their representative datastructure per their
+    ``Resource`` (if one exists).
+    """
+
+    # handle model instances
+    if isinstance(obj, models.Model):
+        obj = model_to_resource(obj, *args, **kwargs)
+
+    # handle querysets
+    elif isinstance(obj, QuerySet):
+        obj = queryset_to_resource(obj, *args, **kwargs)
+
+    # handle dict instances
+    elif isinstance(obj, dict):
+        for k, v in obj.iteritems():
+            obj[k] = convert_to_resource(v, *args, **kwargs)
+
+    # handle other iterables
+    elif hasattr(obj, '__iter__'):
+        obj = [convert_to_resource(o, *args, **kwargs) for o in iter(obj)]
+
+    return obj
