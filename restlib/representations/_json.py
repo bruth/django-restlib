@@ -6,7 +6,7 @@ from django.conf import settings
 DATE_FORMAT = '%m/%d/%Y'
 TIME_FORMAT = '%H:%M:%S'
 
-class EnhancedJSONEncoder(simplejson.JSONEncoder):
+class JSONEncoder(simplejson.JSONEncoder):
     "Enhances the default JSONEncoder to handle other Python types."
     def default(self, obj):
 
@@ -25,10 +25,10 @@ class EnhancedJSONEncoder(simplejson.JSONEncoder):
         if isinstance(obj, time):
             return obj.strftime(TIME_FORMAT)
 
-        return super(EnhancedJSONEncoder, self).default(obj)
+        return super(JSONEncoder, self).default(obj)
 
 
-class EnhancedJSONDecoder(simplejson.JSONDecoder):
+class JSONDecoder(simplejson.JSONDecoder):
     "Enhances the default JSONDecoder to handles other Python types."
     # TODO determine if date and times are worth supporting. my initial
     # gut is no since it is unknown whether the data is going to be handled
@@ -37,14 +37,13 @@ class EnhancedJSONDecoder(simplejson.JSONDecoder):
     # *every* string would have to be tested to see if it matches a datetime
     # format.
     def default(self, obj):
-        return super(EnhancedJSONDecoder, self).default(obj)
+        return super(JSONDecoder, self).default(obj)
 
 
 class JSON(object):
-    """
-    Very basic JSON representation encode/decoder. Additional Python types are
-    supported via a encoder subclass including: set, Decimal, datetime, date
-    and time objects.
+    """Very basic JSON representation encode/decoder. Additional Python types
+    are supported via a encoder subclass including: set, Decimal, datetime,
+    date and time objects.
     """
     encode_options = {}
     decode_options = {}
@@ -58,10 +57,14 @@ class JSON(object):
     def encode(self, data, options=None, **kwargs):
         if options is None:
             options = self.encode_options
-        return simplejson.dumps(data, cls=EnhancedJSONEncoder, **options)
+
+        encoder = JSONEncoder(**options)
+        return encoder.encode(data)
 
     def decode(self, data, options=None, **kwargs):
         if options is None:
             options = self.decode_options
-        return simplejson.loads(data, cls=EnhancedJSONDecoder, **options)
+
+        decoder = JSONDecoder(**options)
+        return decoder.decode(data)
 

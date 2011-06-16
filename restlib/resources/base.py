@@ -2,12 +2,12 @@ import inspect
 
 from django.conf import settings
 from django.template import Context
-from django.http import HttpRequest
+from django.http import HttpRequest, HttpResponse
 from django.core import exceptions
 from django.template.loader import get_template
 from django.utils.importlib import import_module
 
-from restlib.responses import *
+from restlib import http
 from restlib.resources import utils
 from restlib.representations import representation
 
@@ -102,8 +102,7 @@ def _setup_middleware(mcls, resource):
 
 
 class ResourceMetaclass(type):
-    """
-    The base metaclass for ``Resource``. It sets and validates the
+    """The base metaclass for ``Resource``. It sets and validates the
     ``allowed_methods`` attribute.
     """
     _cache = {}
