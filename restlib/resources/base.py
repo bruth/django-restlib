@@ -353,7 +353,7 @@ class Resource(object):
     def resolve_fields(cls, obj):
         if not inspect.isclass(cls):
             cls = cls.__class__
-        return utils.model_to_resource(obj, resource=cls)
+        return utils.convert_to_resource(obj, resource=cls)
 
 
 class ResourceCollectionMetaclass(ResourceMetaclass):
@@ -391,5 +391,5 @@ class ResourceCollection(Resource):
     # being processed
     @classmethod
     def resolve_fields(cls, obj):
-        return utils.model_to_resource(obj, resource=cls._resource.__class__)
+        return utils.convert_to_resource(obj, resource=cls._resource.__class__)
 

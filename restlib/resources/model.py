@@ -76,6 +76,8 @@ class ModelResourceMetaclass(ResourceMetaclass):
 
             # register the model and the associated ModelResource class
             if new_cls.default_for_related:
+                if model in cls._defaults:
+                    raise KeyError, 'default resource for "%s" already defined' % model.__name__
                 cls._defaults[model] = new_cls
 
         return new_cls
