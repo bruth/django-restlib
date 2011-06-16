@@ -103,6 +103,7 @@ REQUEST_URI_TOO_LONG = HttpStatusCode(414, 'Request-URI Too Long')
 UNSUPPORTED_MEDIA_TYPE = HttpStatusCode(415, 'Unsupported Media Type')
 REQUESTED_RANGE_NOT_SATISFIABLE = HttpStatusCode(416, 'Requested Range Not Satisfiable')
 EXPECTATION_FAILED = HttpStatusCode(417, 'Expectation Failed')
+UNPROCESSABLE_ENTITY = HttpStatusCode(422, 'Unprocessable Entity')
 
 # Server Errors 5xx
 INTERNAL_SERVER_ERROR = HttpStatusCode(500, 'Internal Server Error')
@@ -148,6 +149,7 @@ responses = {
     415: UNSUPPORTED_MEDIA_TYPE,
     416: REQUESTED_RANGE_NOT_SATISFIABLE,
     417: PRECONDITION_FAILED,
+    422: UNPROCESSABLE_ENTITY,
     500: INTERNAL_SERVER_ERROR,
     501: NOT_IMPLEMENTED,
     502: BAD_GATEWAY,

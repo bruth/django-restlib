@@ -16,6 +16,7 @@ __all__ = ('Resource', 'ResourceCollection')
 DEFAULT_RESOURCE_MIDDLEWARE = (
     'restlib.resources.middleware.client.MethodNotAllowed',
     'restlib.resources.middleware.client.UnsupportedMediaType',
+    'restlib.resources.middleware.client.UnprocessableEntity',
     'restlib.resources.middleware.client.NotAcceptable',
 )
 

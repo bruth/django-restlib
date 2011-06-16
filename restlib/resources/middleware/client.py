@@ -78,8 +78,23 @@ class UnsupportedMediaType(object):
         if not contenttype or not representation.supports_decoding(contenttype):
             return ''
 
+
+class UnprocessableEntity(object):
+    methods = ('POST', 'PUT', 'PATCH')
+    status_code = 422
+
+    def process_request(self, resource, request, **kwargs):
+        # this, in theory, should never occur if UnsupportedMediaType preceeds,
+        # but you never know..
+        if not hasattr(request, 'contenttype'):
+            return
+
         payload = request.raw_post_data
-        request.data = representation.decode(contenttype, payload)
+
+        try:
+            request.data = representation.decode(request.contenttype, payload)
+        except Exception:
+            return ''
 
 
 class CrossOriginResourceSharing(object):

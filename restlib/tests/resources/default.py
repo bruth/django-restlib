@@ -33,6 +33,7 @@ class ResourceTestCase(TestCase):
                 'restlib.resources.middleware.client.MethodNotAllowed',
                 'restlib.tests.resources.middleware.AjaxRequired',
                 'restlib.resources.middleware.client.UnsupportedMediaType',
+                'restlib.resources.middleware.client.UnprocessableEntity',
             )
 
             def POST(self, request):
@@ -43,6 +44,7 @@ class ResourceTestCase(TestCase):
                 'restlib.resources.middleware.client.Unauthorized',
                 'restlib.resources.middleware.client.MethodNotAllowed',
                 'restlib.resources.middleware.client.UnsupportedMediaType',
+                'restlib.resources.middleware.client.UnprocessableEntity',
             )
 
             def GET(self, request):
