@@ -230,7 +230,7 @@ class Resource(object):
         # object and return it
         if procs.has_key('process_request'):
             for proc in procs['process_request']:
-                mw_cls = proc.__self__
+                mw_cls = proc.im_self
 
                 message = proc(resource=self, request=request)
 
@@ -261,7 +261,7 @@ class Resource(object):
         if procs.has_key('process_response'):
             # iterate over all response processors
             for proc in procs['process_response']:
-                mw_cls = proc.__self__
+                mw_cls = proc.im_self
 
                 message = proc(resource=self, request=request, response=response)
 
