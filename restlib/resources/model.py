@@ -121,6 +121,15 @@ class ModelResource(Resource):
         except cls.model.DoesNotExist:
             return None
 
+    # this is defined as a class method since it really is only referencing
+    # class attributes and it may be referenced by another Resource while
+    # being processed
+    @classmethod
+    def resolve_fields(cls, obj):
+        if not inspect.isclass(cls):
+            cls = cls.__class__
+        return utils.convert_to_resource(obj, resource=cls)
+
 
 class ModelResourceCollectionMetaclass(ResourceCollectionMetaclass):
     def __new__(cls, name, bases, attrs):
@@ -156,6 +165,15 @@ class ModelResourceCollection(ResourceCollection):
     """
 
     __metaclass__ = ModelResourceCollectionMetaclass
+
+    # this is defined as a class method since it really is only referencing
+    # class attributes and it may be referenced by another Resource while
+    # being processed
+    @classmethod
+    def resolve_fields(cls, obj):
+        if not inspect.isclass(cls):
+            cls = cls.__class__
+        return utils.convert_to_resource(obj, resource=cls)
 
 
 def get_or_create_resource(model, force=False, **attrs):

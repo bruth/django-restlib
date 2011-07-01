@@ -230,7 +230,7 @@ class Resource(object):
         # object and return it
         if procs.has_key('process_request'):
             for proc in procs['process_request']:
-                mw_cls = proc.im_self
+                mw_cls = proc.__self__
 
                 message = proc(resource=self, request=request)
 
@@ -261,7 +261,7 @@ class Resource(object):
         if procs.has_key('process_response'):
             # iterate over all response processors
             for proc in procs['process_response']:
-                mw_cls = proc.im_self
+                mw_cls = proc.__self__
 
                 message = proc(resource=self, request=request, response=response)
 
@@ -352,9 +352,7 @@ class Resource(object):
     # being processed
     @classmethod
     def resolve_fields(cls, obj):
-        if not inspect.isclass(cls):
-            cls = cls.__class__
-        return utils.convert_to_resource(obj, resource=cls)
+        return utils.convert_to_resource(obj)
 
 
 class ResourceCollectionMetaclass(ResourceMetaclass):
@@ -392,5 +390,5 @@ class ResourceCollection(Resource):
     # being processed
     @classmethod
     def resolve_fields(cls, obj):
-        return utils.convert_to_resource(obj, resource=cls._resource.__class__)
+        return utils.convert_to_resource(obj)
 

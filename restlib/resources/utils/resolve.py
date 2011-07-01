@@ -158,10 +158,10 @@ def model_to_resource(obj, resource=None, fields=None, depth=0):
     """Takes a model object or queryset and converts it into a native object
     given the list of attributes either local or related to the object.
     """
-    model = obj.__class__
+    from restlib.resources import Resource
 
-    if resource is None:
-        resource, created = get_resource_for_model(model, fields=fields)
+    if resource is None or isinstance(resource, Resource):
+        resource, created = get_resource_for_model(obj.__class__, fields=fields)
 
     new_obj = {}
 

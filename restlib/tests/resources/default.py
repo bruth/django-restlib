@@ -3,6 +3,7 @@ from django.http import HttpRequest, HttpResponse
 
 from restlib import http
 from restlib import resources
+from restlib.tests.models import Tag
 
 __all__ = ('ResourceTestCase',)
 
@@ -13,6 +14,9 @@ class Object(object):
 
 class ResourceTestCase(TestCase):
     def setUp(self):
+        Tag(name='Python').save()
+        Tag(name='REST').save()
+
         class A(resources.Resource):
             pass
 
@@ -20,7 +24,7 @@ class ResourceTestCase(TestCase):
             allowed_methods = ('GET', 'POST', 'PUT')
 
             def GET(self, request):
-                return 'OK'
+                return Tag.objects.all()
 
             def POST(self, request):
                 return 'Created'
@@ -37,7 +41,7 @@ class ResourceTestCase(TestCase):
             )
 
             def POST(self, request):
-                return HttpResponse(status=http.CREATED)
+                return http.CREATED
 
         class D(resources.Resource):
             middleware = (
@@ -128,4 +132,10 @@ class ResourceTestCase(TestCase):
         self.assertEqual(request.contenttype, 'application/json')
         self.assertTrue(hasattr(request, 'PUT'))
 
+    def test_resolver(self):
+        request = HttpRequest()
+        request.method = 'GET'
+        request.META['HTTP_ACCEPT'] = '*/*'
 
+        response = self.b(request)
+        self.assertEqual(response.content, '[{"id": 1}, {"id": 2}]')
