@@ -385,10 +385,3 @@ class ResourceCollection(Resource):
 
     __metaclass__ = ResourceCollectionMetaclass
 
-    # this is defined as a class method since it really is only referencing
-    # class attributes and it may be referenced by another ModelResource while
-    # being processed
-    @classmethod
-    def resolve_fields(cls, obj):
-        return utils.convert_to_resource(obj)
-

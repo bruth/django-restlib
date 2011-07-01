@@ -126,8 +126,6 @@ class ModelResource(Resource):
     # being processed
     @classmethod
     def resolve_fields(cls, obj):
-        if not inspect.isclass(cls):
-            cls = cls.__class__
         return utils.convert_to_resource(obj, resource=cls)
 
 
@@ -171,9 +169,7 @@ class ModelResourceCollection(ResourceCollection):
     # being processed
     @classmethod
     def resolve_fields(cls, obj):
-        if not inspect.isclass(cls):
-            cls = cls.__class__
-        return utils.convert_to_resource(obj, resource=cls)
+        return utils.convert_to_resource(obj, resource=cls.resource)
 
 
 def get_or_create_resource(model, force=False, **attrs):
