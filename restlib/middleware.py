@@ -1,6 +1,6 @@
 from django.conf import settings
-from django.middlware.http import ConditionalGetMiddleware
-from django.middlware.common import CommonMiddleware
+from django.middleware.http import ConditionalGetMiddleware
+from django.middleware.common import CommonMiddleware
 
 class StreamingCommonMiddleware(CommonMiddleware):
     def process_response(self, request, response):
