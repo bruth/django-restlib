@@ -57,24 +57,30 @@ def _setup_middleware(mcls, resource):
     # does not exist. cache each ``mw_instance`` as they are loaded
     for middleware_path in resource.middleware:
         if middleware_path not in mcls._middleware:
-            try:
-                dot = middleware_path.rindex('.')
-            except ValueError:
-                raise exceptions.ImproperlyConfigured('%s isn\'t a middleware module' % middleware_path)
-            mw_module, mw_classname = middleware_path[:dot], middleware_path[dot+1:]
-            try:
-                mod = import_module(mw_module)
-            except ImportError, e:
-                raise exceptions.ImproperlyConfigured('Error importing middleware %s: "%s"' % (mw_module, e))
-            try:
-                mw_class = getattr(mod, mw_classname)
-            except AttributeError:
-                raise exceptions.ImproperlyConfigured('Middleware module "%s" does not define a "%s" class' % (mw_module, mw_classname))
+            if inspect.isclass(middleware_path):
+                mw_instance = middleware_path()
+            else:
+                try:
+                    dot = middleware_path.rindex('.')
+                except ValueError:
+                    raise exceptions.ImproperlyConfigured('%s isn\'t a middleware module' % middleware_path)
 
-            try:
-                mcls._middleware[middleware_path] = mw_instance = mw_class()
-            except exceptions.MiddlewareNotUsed:
-                continue
+                mw_module, mw_classname = middleware_path[:dot], middleware_path[dot+1:]
+
+                try:
+                    mod = import_module(mw_module)
+                except ImportError, e:
+                    raise exceptions.ImproperlyConfigured('Error importing middleware %s: "%s"' % (mw_module, e))
+
+                try:
+                    mw_class = getattr(mod, mw_classname)
+                except AttributeError:
+                    raise exceptions.ImproperlyConfigured('Middleware module "%s" does not define a "%s" class' % (mw_module, mw_classname))
+
+                try:
+                    mcls._middleware[middleware_path] = mw_instance = mw_class()
+                except exceptions.MiddlewareNotUsed:
+                    continue
         else:
             mw_instance = mcls._middleware[middleware_path]
 
