@@ -78,7 +78,7 @@ class ResourceTestCase(TestCase):
         request.method = 'POST'
 
         response = self.c(request)
-        self.assertEqual(response.status_code, http.NOT_FOUND)
+        self.assertEqual(response.status_code, http.NOT_FOUND.code)
 
         request.META['HTTP_X_REQUESTED_WITH'] = u'XMLHttpRequest'
         request.META['CONTENT_TYPE'] = 'application/json'
