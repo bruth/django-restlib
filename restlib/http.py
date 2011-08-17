@@ -1,3 +1,5 @@
+from django.http import HttpResponse
+
 class HttpMethod(object):
     """An HTTP method which defines whether this method is safe and
     idempotent.
@@ -30,9 +32,9 @@ class HttpMethod(object):
         return super(HttpMethod, self).__cmp__(obj)
 
 
-class HttpStatusCode(object):
+class HttpStatusCode(Exception):
     """HTTP response status code which may be used within ``Resource``
-    methods for constructing a reponse.
+    methods for constructing a response.
 
     ref: http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
     """
@@ -45,6 +47,12 @@ class HttpStatusCode(object):
 
     def __eq__(self, obj):
         return obj == self.code
+
+    def __call__(self, content='', mimetype=None, **headers):
+        resp = HttpResponse(content, status=self.code, mimetype=mimetype)
+        for key, value in self.header.items():
+            resp[key] = value
+        return resp
 
 
 GET     = HttpMethod('GET', True, True)

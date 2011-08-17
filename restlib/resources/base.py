@@ -210,8 +210,11 @@ class Resource(object):
         if _response is not None:
             return _response
 
-        # call the requested resource method
-        output = getattr(self, method)(request, *args, **kwargs)
+        try:
+            # call the requested resource method
+            output = getattr(self, method)(request, *args, **kwargs)
+        except http.HttpStatusCode, e:
+            output = e
 
         # get the response based on the Resource method's output
         response = self._get_response(request, output)
@@ -238,19 +241,25 @@ class Resource(object):
             for proc in procs['process_request']:
                 mw_cls = proc.__self__
 
-                message = proc(resource=self, request=request)
+                try:
+                    output = proc(resource=self, request=request)
+                except http.HttpStatusCode, e:
+                    output = e
 
-                if message is not None:
-                    if isinstance(message, HttpResponse):
-                        return message
+                if output is not None:
+                    if isinstance(output, HttpResponse):
+                        return output
 
                     # custom method that may exist on the middleware class
                     # for generating an HttpResponse object
                     if hasattr(mw_cls, 'get_response'):
-                        return mw_cls.get_response(message=message,
+                        return mw_cls.get_response(message=output,
                             resource=self, request=request)
 
-                    return HttpResponse(str(message), status=mw_cls.status_code)
+                    if not isinstance(output, http.HttpStatusCode):
+                        output = (http.responses[mw_cls.status_code], output)
+
+                    return self._get_response(request, output)
 
     def _process_response_middleware(self, request, response):
         method = request.method
@@ -269,17 +278,23 @@ class Resource(object):
             for proc in procs['process_response']:
                 mw_cls = proc.__self__
 
-                message = proc(resource=self, request=request, response=response)
+                try:
+                    output = proc(resource=self, request=request, response=response)
+                except http.HttpStatusCode, e:
+                    output = e
 
-                if message is not None:
-                    if isinstance(message, HttpResponse):
-                        return message
+                if output is not None:
+                    if isinstance(output, HttpResponse):
+                        return output
 
                     if hasattr(mw_cls, 'get_response'):
-                        return mw_cls.get_response(message=message,
+                        return mw_cls.get_response(message=output,
                             resource=self, request=request)
 
-                    return HttpResponse(str(message), status=mw_cls.status_code)
+                    if not isinstance(output, http.HttpStatusCode):
+                        output = (http.responses[mw_cls.status_code], output)
+
+                    return self._get_response(request, output)
 
     def _get_response(self, request, output):
         """Handles various output types from HTTP method calls.
@@ -334,17 +349,19 @@ class Resource(object):
 
         # if there is content then handle it appropriately
         if content is not None:
-            # if marked as streaming, this accepttype is the assumed output
-            accepttype = request.accepttype
+            if hasattr(request, 'accepttype'):
+                # if marked as streaming, this accepttype is the assumed output
+                accepttype = request.accepttype
 
-            if streaming is False:
-                # attempt to resolve and encode the content based on the
-                # accepttype
-                content = self.resolve_fields(content)
-                content = representation.encode(accepttype, content)
+                if not streaming:
+                    # attempt to resolve and encode the content based on the
+                    # accepttype
+                    content = self.resolve_fields(content)
+                    content = representation.encode(accepttype, content)
 
-            response = HttpResponse(content, status=status, mimetype=accepttype)
-
+                response = HttpResponse(content, status=status, mimetype=accepttype)
+            else:
+                response = HttpResponse(content, status=status)
         else:
             response = HttpResponse(status=status)
 
