@@ -1,6 +1,5 @@
 import inspect
 
-from django.conf import settings
 from django.template import Context
 from django.http import HttpRequest, HttpResponse
 from django.core import exceptions
@@ -8,20 +7,11 @@ from django.template.loader import get_template
 from django.utils.importlib import import_module
 
 from restlib import http
+from restlib.conf import settings
 from restlib.resources import utils
 from restlib.representations import representation
 
 __all__ = ('Resource', 'ResourceCollection')
-
-DEFAULT_RESOURCE_MIDDLEWARE = (
-    'restlib.resources.middleware.client.MethodNotAllowed',
-    'restlib.resources.middleware.client.UnsupportedMediaType',
-    'restlib.resources.middleware.client.UnprocessableEntity',
-    'restlib.resources.middleware.client.NotAcceptable',
-)
-
-RESOURCE_MIDDLEWARE = getattr(settings, 'RESOURCE_MIDDLEWARE',
-    DEFAULT_RESOURCE_MIDDLEWARE)
 
 def build_docstring(cls):
     """
@@ -201,7 +191,7 @@ class Resource(object):
 
     mimetypes = ('application/json',)
 
-    middleware = RESOURCE_MIDDLEWARE
+    middleware = settings.RESOURCE_MIDDLEWARE
 
     def __call__(self, request, *args, **kwargs):
         method = request.method
