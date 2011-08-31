@@ -316,13 +316,13 @@ class Resource(object):
 
         # the status is returned, but with no content 
         if isinstance(output, http.HttpStatusCode):
-            status = output.code
+            status = output.status_code
 
         # see if the output is a status/content pair, otherwise
         # assume the output is strictly content
         elif output and type(output) in (list, tuple):
             if isinstance(output[0], http.HttpStatusCode):
-                status = output[0].code
+                status = output[0].status_code
                 content = output[1]
             else:
                 content = output

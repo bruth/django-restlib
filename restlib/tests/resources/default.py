@@ -78,7 +78,7 @@ class ResourceTestCase(TestCase):
         request.method = 'POST'
 
         response = self.c(request)
-        self.assertEqual(response.status_code, http.NOT_FOUND.code)
+        self.assertEqual(response.status_code, http.NOT_FOUND.status_code)
 
         request.META['HTTP_X_REQUESTED_WITH'] = u'XMLHttpRequest'
         request.META['CONTENT_TYPE'] = 'application/json'
@@ -93,7 +93,7 @@ class ResourceTestCase(TestCase):
         request.method = 'GET'
 
         response = self.d(request)
-        self.assertEqual(response.status_code, http.UNAUTHORIZED.code)
+        self.assertEqual(response.status_code, http.UNAUTHORIZED.status_code)
 
     def test_head(self):
         request = HttpRequest()

@@ -38,18 +38,18 @@ class HttpStatusCode(Exception):
 
     ref: http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
     """
-    def __init__(self, code, message):
-        self.code = code
+    def __init__(self, status_code, message):
+        self.status_code = status_code
         self.message = message
 
     def __repr__(self):
-        return '<HttpStatusCode: %s (%d)>' % (self.message, self.code)
+        return '<HttpStatusCode: %s (%d)>' % (self.message, self.status_code)
 
     def __eq__(self, obj):
-        return obj == self.code
+        return obj == self.status_code
 
     def __call__(self, content='', mimetype=None, **headers):
-        resp = HttpResponse(content, status=self.code, mimetype=mimetype)
+        resp = HttpResponse(content, status=self.status_code, mimetype=mimetype)
         for key, value in self.header.items():
             resp[key] = value
         return resp
