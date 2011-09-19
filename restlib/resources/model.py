@@ -4,6 +4,7 @@ from django.db import models
 from django.db.models import loading
 from django.utils.importlib import import_module
 
+from restlib import http
 from restlib.resources.base import (ResourceMetaclass, Resource,
     ResourceCollection, ResourceCollectionMetaclass)
 from restlib.resources import utils
@@ -128,6 +129,12 @@ class ModelResource(Resource):
     def resolve_fields(cls, obj):
         return utils.convert_to_resource(obj, resource=cls)
 
+    def GET(self, request, pk):
+        obj = self.get(request, pk=pk)
+        if obj is None:
+            return http.NOT_FOUND
+        return obj
+
 
 class ModelResourceCollectionMetaclass(ResourceCollectionMetaclass):
     def __new__(cls, name, bases, attrs):
@@ -170,6 +177,9 @@ class ModelResourceCollection(ResourceCollection):
     @classmethod
     def resolve_fields(cls, obj):
         return utils.convert_to_resource(obj, resource=cls.resource)
+
+    def GET(self, request):
+        return self.queryset(request)
 
 
 def get_or_create_resource(model, force=False, **attrs):
