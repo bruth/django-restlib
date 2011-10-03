@@ -159,6 +159,7 @@ class ModelResourceCollectionMetaclass(ResourceCollectionMetaclass):
             # conveniences
             new_cls.model = new_cls.resource.model
             new_cls.queryset = new_cls.resource.queryset
+            new_cls.get = new_cls.resource.get
 
         return new_cls
 
