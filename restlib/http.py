@@ -50,8 +50,8 @@ class HttpStatusCode(Exception):
 
     def __call__(self, content='', mimetype=None, **headers):
         resp = HttpResponse(content, status=self.status_code, mimetype=mimetype)
-        for key, value in self.header.items():
-            resp[key] = value
+        for key, value in headers.items():
+            resp[key.replace('_', '-').title()] = value
         return resp
 
 
