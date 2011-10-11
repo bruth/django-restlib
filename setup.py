@@ -75,12 +75,10 @@ setup(
     version = version,
     name = 'django-restlib',
     author = 'Byron Ruth',
-    author_email = 'bruth@codeomics.com',
+    author_email = 'b@devel.io',
     description = 'Django REST API',
     license = 'BSD',
     keywords = 'REST Django HTTP HATEOAS',
-
-    install_requires = ['django'],
 
     packages = packages,
     cmdclass = cmdclasses,
