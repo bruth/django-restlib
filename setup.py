@@ -6,7 +6,6 @@ import os
 import sys
 
 main_package = 'restlib'
-exclude_dirs = ['tests', 'fixtures']
 
 class osx_install_data(install_data):
     # On MacOS, the platform-specific lib dir is /System/Library/Framework/Python/.../
@@ -57,7 +56,6 @@ for dirpath, dirnames, filenames in os.walk(main_package):
     # Ignore dirnames that start with '.'
     for i, dirname in enumerate(dirnames):
         if dirname.startswith('.'): del dirnames[i]
-        elif dirname in exclude_dirs: del dirnames[i]
     if '__init__.py' in filenames:
         packages.append('.'.join(fullsplit(dirpath)))
     elif filenames:
@@ -79,6 +77,7 @@ setup(
     description = 'Django REST API',
     license = 'BSD',
     keywords = 'REST Django HTTP HATEOAS',
+    url = 'https://github.com/bruth/django-restlib',
 
     packages = packages,
     cmdclass = cmdclasses,
