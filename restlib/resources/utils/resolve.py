@@ -166,7 +166,13 @@ def model_to_resource(obj, resource=None, fields=None, depth=0):
 
     new_obj = {}
 
-    for field in resource.fields:
+    # ensure we are using an instance to enable using instance bound methods
+    if isinstance(resource, ModelResource):
+        instance = resource
+    else:
+        instance = resource()
+
+    for field in instance.fields:
         fields = None
 
         # this implies a nested relationship, but with explicitly defined
@@ -181,16 +187,16 @@ def model_to_resource(obj, resource=None, fields=None, depth=0):
 
         # only apply exclude to the first level since other depths need to
         # be explicitly defined
-        if depth == 0 and field in resource.exclude:
+        if depth == 0 and field in instance.exclude:
             continue
 
         # test to see if the field is on the obj/model
         if hasattr(obj, field):
             value = getattr(obj, field)
 
-        # fallback to a local resource method, pass in the object
+        # fallback to a local instance method, pass in the object
         else:
-            value = getattr(resource, field)(obj)
+            value = getattr(instance, field)(obj)
 
         # call if a callable
         if callable(value):
